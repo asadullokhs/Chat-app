@@ -54,6 +54,56 @@ const userCtrl = {
       res.status(503).json({ message: error.message });
     }
   },
+  updateUser: async (req, res) => {
+    try {
+      const { password } = req.body;
+      const { userId } = req.params;
+
+      if (
+        userId == req.user._id ||
+        req.user.role == "admin" ||
+        req.user.role == "superadmin"
+      ) {
+        if (password && password !== "") {
+          const hashdedPassword = await bcrypt.hash(password, 10);
+
+          req.body.password = hashdedPassword;
+        } else {
+          delete req.body.password;
+        }
+
+        if (req.files) {
+          const { image } = req.files;
+
+          const format = image.mimetype.split("/")[1];
+
+          if (format !== "png" && format !== "jpg" && format !== "jpeg") {
+            return res.status(403).send({ message: "Format is incorrect" });
+          }
+
+          const nameImg = `${v4()}.${format}`;
+
+          image.mv(path.join(uploadsDir, nameImg), (err) => {
+            if (err) {
+              res.status(503).send(err.message);
+            }
+          });
+
+          req.body.avatar = nameImg;
+        }
+
+        const user = await Users.findByIdAndUpdate(userId, req.body, {
+          new: true,
+        });
+
+        return res.status(200).send({ message: "Updated succesfully", user });
+      }
+
+      res.status(405).send({ message: "Not allowed" });
+    } catch (error) {
+      res.status(503).send(error.message);
+    }
+  },
 };
 
 module.exports = userCtrl;
