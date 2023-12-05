@@ -1,4 +1,9 @@
 const Users = require("../model/userModel");
+const path = require("path");
+const fs = require("fs");
+const { v4 } = require("uuid");
+
+const uploadsDir = path.join(__dirname, "../", "public");
 
 const userCtrl = {
   getAll: async (req, res) => {
@@ -38,7 +43,26 @@ const userCtrl = {
         const deletedUser = await Users.findByIdAndDelete(userId);
 
         if (deletedUser) {
-          // delete image
+          if (deletedUser.profilePicture) {
+            await fs.unlink(
+              path.join(uploadsDir, deletedUser.profilePicture),
+              (err) => {
+                if (err) {
+                  return res.status(503).send({ message: err.message });
+                }
+              }
+            );
+          }
+          if (deletedUser.coverPicture) {
+            await fs.unlink(
+              path.join(uploadsDir, deletedUser.coverPicture),
+              (err) => {
+                if (err) {
+                  return res.status(503).send({ message: err.message });
+                }
+              }
+            );
+          }
           res
             .status(200)
             .json({ message: "Succesfully deleted", user: deletedUser });
@@ -58,6 +82,7 @@ const userCtrl = {
     try {
       const { password } = req.body;
       const { userId } = req.params;
+      const user = await Users.findById(userId);
 
       if (userId == req.user._id || req.userIsAdmin) {
         if (password && password !== "") {
@@ -69,33 +94,80 @@ const userCtrl = {
         }
 
         if (req.files) {
-          const { image } = req.files;
+          if (req.files.profilePicture) {
+            const { profilePicture } = req.files;
 
-          const format = image.mimetype.split("/")[1];
+            const format = profilePicture.mimetype.split("/")[1];
 
-          if (format !== "png" && format !== "jpg" && format !== "jpeg") {
-            return res.status(403).send({ message: "Format is incorrect" });
-          }
-
-          const nameImg = `${v4()}.${format}`;
-
-          image.mv(path.join(uploadsDir, nameImg), (err) => {
-            if (err) {
-              res.status(503).send(err.message);
+            if (format !== "png" && format !== "jpg" && format !== "jpeg") {
+              return res.status(403).json({ message: "Format is incorrect" });
             }
-          });
 
-          req.body.avatar = nameImg;
+            const nameImg = `${v4()}.${format}`;
+
+            profilePicture.mv(path.join(uploadsDir, nameImg), (err) => {
+              if (err) {
+                res.status(503).json(err.message);
+              }
+            });
+
+            req.body.profilePicture = nameImg;
+
+            if (user.profilePicture) {
+              await fs.unlink(
+                path.join(uploadsDir, user.profilePicture),
+                (err) => {
+                  if (err) {
+                    return res.status(503).send({ message: err.message });
+                  }
+                }
+              );
+            }
+          } else if (req.files.coverPicture) {
+            const { coverPicture } = req.files;
+
+            const format = coverPicture.mimetype.split("/")[1];
+
+            if (format !== "png" && format !== "jpg" && format !== "jpeg") {
+              return res.status(403).json({ message: "Format is incorrect" });
+            }
+
+            const nameImg = `${v4()}.${format}`;
+
+            coverPicture.mv(path.join(uploadsDir, nameImg), (err) => {
+              if (err) {
+                res.status(503).json(err.message);
+              }
+            });
+
+            req.body.coverPicture = nameImg;
+            if (user.coverPicture) {
+              await fs.unlink(
+                path.join(uploadsDir, user.coverPicture),
+                (err) => {
+                  if (err) {
+                    return res.status(503).send({ message: err.message });
+                  }
+                }
+              );
+            }
+          }
         }
 
-        const user = await Users.findByIdAndUpdate(userId, req.body, {
+        const updatedUser = await Users.findByIdAndUpdate(userId, req.body, {
           new: true,
         });
 
-        return res.status(200).send({ message: "Updated succesfully", user });
+        if (!updatedUser) {
+          return res.status(404).json({ message: "Not found" });
+        }
+
+        return res
+          .status(200)
+          .json({ message: "Updated succesfully", user: updatedUser });
       }
     } catch (error) {
-      res.status(503).send(error.message);
+      res.status(503).json(error.message);
     }
   },
 };

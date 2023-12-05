@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname, "src", "public")));
 // middlewear
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(fileUpload({ useTempFiles: true }));
+app.use(fileUpload());
 app.use(cors());
 
 // routes
