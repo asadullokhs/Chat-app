@@ -59,11 +59,7 @@ const userCtrl = {
       const { password } = req.body;
       const { userId } = req.params;
 
-      if (
-        userId == req.user._id ||
-        req.user.role == "admin" ||
-        req.user.role == "superadmin"
-      ) {
+      if (userId == req.user._id || req.userIsAdmin) {
         if (password && password !== "") {
           const hashdedPassword = await bcrypt.hash(password, 10);
 
@@ -98,8 +94,6 @@ const userCtrl = {
 
         return res.status(200).send({ message: "Updated succesfully", user });
       }
-
-      res.status(405).send({ message: "Not allowed" });
     } catch (error) {
       res.status(503).send(error.message);
     }

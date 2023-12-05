@@ -3,7 +3,6 @@ const JWT = require("jsonwebtoken");
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
 const authMiddlewear = (req, res, next) => {
-  console.log(req);
   let token = req.headers.token;
 
   if (!token) {
