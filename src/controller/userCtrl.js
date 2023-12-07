@@ -26,7 +26,7 @@ const userCtrl = {
       let users = await Users.findById(userId);
 
       if (!users) {
-        return res.status(404).json("Not found!");
+        return res.status(404).json({ message: "Not found" });
       }
 
       const { password, ...otherDetails } = users._doc;

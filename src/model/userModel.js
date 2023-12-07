@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
     about: String,
     livesIn: String,
     country: String,
-    works: String,
+    worksAt: String,
     relationship: String,
   },
   { timestamps: true }

@@ -10,6 +10,8 @@ dotenv.config();
 // route
 const authRouter = require("./src/router/authRouter");
 const userRouter = require("./src/router/userRouter");
+const chatRouter = require("./src/router/chatRouter");
+const messageRouter = require("./src/router/messageRouter");
 
 const app = express();
 const PORT = process.env.PORT || 4002;
@@ -26,6 +28,8 @@ app.use(cors());
 // routes
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+app.use("/api/chat", chatRouter);
+app.use("/api/message", messageRouter);
 
 const MONGO_URL = process.env.MONGO_URL;
 
