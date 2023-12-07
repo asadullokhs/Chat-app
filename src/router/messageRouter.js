@@ -7,5 +7,6 @@ const authMiddlewear = require("../middlewear/authMiddleware");
 router.post("/", authMiddlewear, messageCtrl.addMessage);
 router.get("/:chatId", authMiddlewear, messageCtrl.getMessages);
 router.delete("/:messageId", authMiddlewear, messageCtrl.deleteMessage);
+router.put("/:messageId", authMiddlewear, messageCtrl.updateMessage);
 
 module.exports = router;

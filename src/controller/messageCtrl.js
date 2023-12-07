@@ -79,6 +79,63 @@ const messageCtrl = {
       res.status(503).json({ message: error.message });
     }
   },
+  updateMessage: async (req, res) => {
+    try {
+      const { messageId } = req.params;
+
+      const message = await Message.findById(messageId);
+
+      if (message.senderId == req.user._id) {
+        if (req.files) {
+          if (req.files.file) {
+            const { file } = req.files;
+
+            const format = file.mimetype.split("/")[1];
+
+            if (format !== "png" && format !== "jpg" && format !== "jpeg") {
+              return res.status(403).json({ message: "Format is incorrect" });
+            }
+
+            const nameImg = `${v4()}.${format}`;
+
+            file.mv(path.join(uploadsDir, nameImg), (err) => {
+              if (err) {
+                res.status(503).json(err.message);
+              }
+            });
+
+            req.body.file = nameImg;
+
+            if (message.file) {
+              await fs.unlink(path.join(uploadsDir, message.file), (err) => {
+                if (err) {
+                  return res.status(503).send({ message: err.message });
+                }
+              });
+            }
+          }
+        }
+
+        const updatedMessage = await Message.findByIdAndUpdate(
+          messageId,
+          req.body,
+          {
+            new: true,
+          }
+        );
+
+        if (!updatedMessage) {
+          return res.status(404).json({ message: "Not found" });
+        }
+
+        return res
+          .status(200)
+          .json({ message: "Updated succesfully", updatedMessage });
+      }
+    } catch (error) {
+      res.status(503).json(error.message);
+    }
+  },
 };
 
 module.exports = messageCtrl;
