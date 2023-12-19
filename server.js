@@ -66,6 +66,14 @@ io.on("connection", (socket) => {
 
     io.emit("get-users", activeUsers);
   });
+
+  socket.on("send-message", (data) => {
+    const { receivedId } = data;
+    const user = activeUsers.find((user) => user.userId === receivedId);
+    if (user) {
+      io.to(user.socketId).emit("answer-message", data);
+    }
+  });
 });
 
 const MONGO_URL = process.env.MONGO_URL;
