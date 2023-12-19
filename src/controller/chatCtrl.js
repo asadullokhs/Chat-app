@@ -1,4 +1,5 @@
 const Chat = require("../model/chatModel");
+const Message = require("../model/messageModel");
 
 const chatCtrl = {
   userChat: async (req, res) => {
@@ -37,6 +38,7 @@ const chatCtrl = {
     try {
       const chat = await Chat.findByIdAndDelete(chatId);
       if (chat) {
+        Message.deleteMany({ chatId });
         return res
           .status(200)
           .json({ message: "Chat deleted successfully", chat });
