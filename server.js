@@ -22,8 +22,9 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     // origin: "netlify"
+    origin: "*",
     // methods: ["GET", "POST", "DELETE"]
-    origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
   },
 });
 
