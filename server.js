@@ -32,10 +32,10 @@ const io = socketIo(server, {
 app.use(express.static(path.join(__dirname, "src", "public")));
 
 // middlewear
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
-app.use(cors());
 
 // routes
 app.use("/api/auth", authRouter);
