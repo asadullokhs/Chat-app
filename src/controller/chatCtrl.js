@@ -36,16 +36,23 @@ const chatCtrl = {
   deleteChat: async (req, res) => {
     const { chatId } = req.params;
     try {
-      const chat = await Chat.findByIdAndDelete(chatId);
+      const chat = await Chat.findById(chatId);
       if (chat) {
-        Message.deleteMany({ chatId });
-        return res
-          .status(200)
-          .json({ message: "Chat deleted successfully", chat });
+        (await Message.find({ chatId: chat._id })).forEach((message) => {
+          if (message.file) {
+            fs.unlinkSync(path.join(uploadsDir, message.file), (err) => {
+              if (err) {
+                return res.status(503).json({ message: err.message });
+              }
+            });
+          }
+        });
+        await Message.deleteMany({ chatId: chat._id });
+        await Chat.findByIdAndDelete(chat._id);
+        return res.status(200).json({ message: "chat deleted successfully" });
       }
-      res.status(404).json({ message: "Chat not found" });
+      res.status(404).json({ message: "Chat not foud" });
     } catch (error) {
-      console.log(error);
       res.status(503).json({ message: error.message });
     }
   },
